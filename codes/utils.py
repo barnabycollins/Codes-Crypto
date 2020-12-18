@@ -1,5 +1,7 @@
 import sys, re
 
+pythonCommand = 'python374'
+
 def getFileFromCommand():
 
     if (len(sys.argv) == 2):

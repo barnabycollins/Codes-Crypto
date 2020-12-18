@@ -5,6 +5,7 @@
 
 import os
 import sys
+from utils import pythonCommand
 
 testFile        = sys.argv[1]
 inputFile       = testFile + ".tex"
@@ -18,14 +19,14 @@ print("Input file: \t" + inputFile)
 print("Input size: \t" + str(inputSize) + "\n")
 
 # Runs your encoder and prints out size of encoded file
-os.system("python374 encoder.py " + inputFile)
+os.system(pythonCommand + " encoder.py " + inputFile)
 encodedSize = os.path.getsize(encodedFile)
 print("Encoded file: \t" + encodedFile)
 print("Encoded size: \t" + str(encodedSize) + "\n")
 
 
 # Runs your decoder and prints out size of decoded file
-os.system("python374 decoder.py " + encodedFile)
+os.system(pythonCommand + " decoder.py " + encodedFile)
 decodedSize = os.path.getsize(decodedFile)
 print("Decoded file: \t" + decodedFile)
 print("Decoded size: \t"  + str(decodedSize) + "\n")
