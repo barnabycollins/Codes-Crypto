@@ -1,12 +1,16 @@
 from utils import getFileFromCommand
+import encoder_functions
 
 (fileInfo, fileName) = getFileFromCommand()
 
 inFile = open(fileName, 'r', newline='')
-
-outFile = open(f'{fileInfo["name"]}.lz', 'w', newline='')
-
-outFile.write(inFile.read())
-
+inData = inFile.read()
 inFile.close()
+
+functionToUse = encoder_functions.huffman_test
+
+outData = functionToUse(inData)
+
+outFile = open(f'{fileInfo["name"]}.lz', 'wb')
+outFile.write(outData)
 outFile.close()
