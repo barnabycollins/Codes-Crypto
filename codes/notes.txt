@@ -1,0 +1,1 @@
+Tried Huffman using dahuffman library: achieved ~1.6 compression ratio
