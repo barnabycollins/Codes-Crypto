@@ -1,1 +1,2 @@
 Tried Huffman using dahuffman library: achieved ~1.6 compression ratio
+Tried LZW: achieved ~1.8-1.9. Struggled with special case of repeated items before realising that an exception could be made to handle it.

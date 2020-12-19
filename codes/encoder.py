@@ -7,7 +7,7 @@ inFile = open(fileName, 'r', newline='')
 inData = inFile.read()
 inFile.close()
 
-functionToUse = encoder_functions.huffman_test
+functionToUse = encoder_functions.lzw
 
 outData = functionToUse(inData)
 
