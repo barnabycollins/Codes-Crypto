@@ -11,3 +11,10 @@ Going to use regexes to identify common words and TeX tags:
 - collapse repeated letters
 - find common tags (\aaaa, \aaaa{bbb})
 - find common words
+
+Combining regex methods with LZW yielded 2.1-2.3 ratios
+
+Trying JSON and adjusting minimum number of character repeats to collapse (away from 3) yielded increased filesizes so currently in a bit of a local maximum.
+Adding a minumum word length of 3 to the regex improved performance slightly.
+
+Need to give potential other regex patterns some thought.

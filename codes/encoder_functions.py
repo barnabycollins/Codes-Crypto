@@ -83,7 +83,7 @@ def replace_tags(inData):
     tagGroups = [
         r'(\\[a-zA-Z]+)',                       # standard TeX tag
         r'(\\[a-zA-Z]+(?:\{[a-zA-Z ]*\})+)',    # TeX tag with parameters following it
-        r'[ \n]([a-zA-Z]+)[ \.,:;!]'            # words
+        r'[ \n]([a-zA-Z]{3,})[ \.,:;!]'         # words at least 3 chars long
     ]
 
     numGroups = len(tagGroups)
