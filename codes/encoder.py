@@ -7,7 +7,7 @@ inFile = open(fileName, 'r', newline='')
 inData = inFile.read()
 inFile.close()
 
-functionToUse = encoder_functions.lzw
+functionToUse = encoder_functions.replace_repeats_then_lzw
 
 outData = functionToUse(inData)
 
