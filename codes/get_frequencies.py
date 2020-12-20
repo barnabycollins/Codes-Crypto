@@ -6,7 +6,7 @@ import re
 
 contents = open(fileName, 'r').read()
 
-instanceLength = 1
+instanceLength = 10
 instances = re.findall(".{" + str(instanceLength) + "}", contents)
 
 counts = Counter(instances)

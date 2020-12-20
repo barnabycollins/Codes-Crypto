@@ -46,4 +46,5 @@ def lzw(inData):
 
     return outData
 
-
+def huffman_and_lzw(inData):
+    return lzw(huffman_test(inData))

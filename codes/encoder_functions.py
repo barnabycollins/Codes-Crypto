@@ -17,7 +17,7 @@ def huffman_test(inData):
     return pickle.dumps(to_pickle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def lzw(inData):
-    import pickle # TODO see if you can come up with a better way
+    import pickle # TODO see if I can come up with a better way
 
     encode_dict = {}
     for i in range(256):
@@ -45,8 +45,11 @@ def lzw(inData):
     
     return pickle.dumps(outData, protocol=pickle.HIGHEST_PROTOCOL)
 
-'''
-import decoder_functions
+    
+def huffman_and_lzw(inData):
+    return huffman_test(lzw(inData))
 
-print(decoder_functions.lzw(lzw('DDDDDDD')))
-'''
+
+if __name__ == '__main__':
+
+    #import decoder_functions

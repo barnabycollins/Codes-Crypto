@@ -1,2 +1,13 @@
 Tried Huffman using dahuffman library: achieved ~1.6 compression ratio
 Tried LZW: achieved ~1.8-1.9. Struggled with special case of repeated items before realising that an exception could be made to handle it.
+
+Could try running LZW on bits rather than characters?
+
+Need to standardise inFile and outFile so strategies can be chained
+
+Tried implementing generic substring methods but struggled with overlaps.
+
+Going to use regexes to identify common words and TeX tags:
+- collapse repeated letters
+- find common tags (\aaaa, \aaaa{bbb})
+- find common words
