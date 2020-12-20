@@ -16,11 +16,9 @@ def huffman_test(inData):
 
     return pickle.dumps(to_pickle, protocol=pickle.HIGHEST_PROTOCOL)
 
-def lzw(inData, expanded_chars=False):
-    dictIndex = 256
-    
-    if (expanded_chars):
-        dictIndex = 768
+def lzw(inData, max_char=255):
+
+    dictIndex = max_char+1
 
     encode_dict = {}
     for i in range(dictIndex):
@@ -31,17 +29,11 @@ def lzw(inData, expanded_chars=False):
     i = 0
     while i < len(inData):
         j = i+1
-        
+
         while inData[i:j] in encode_dict and j <= len(inData):
             j += 1
 
-        print(encode_dict['̄'])
-        try:
-            outData.append(encode_dict[inData[i:j-1]])
-        
-        except:
-            print(ord(inData[i]), ord(inData[i+1]), i, j-1)
-            exit()
+        outData.append(encode_dict[inData[i:j-1]])
 
         encode_dict[inData[i:j]] = dictIndex
 
@@ -62,25 +54,26 @@ def replace_runs(inData, expanded_chars=False):
 
     replaced = ''
 
+    max_char = low_bound
+
     i = 0
     while i < len(inData):
         j = i+1
-        try:
-            while (j < len(inData) and inData[j] == inData[i]):
-                j += 1
-        
-        except:
-            print(i, j, len(inData))
+        while (j < len(inData) and inData[j] == inData[i]):
+            j += 1
         
         if (j-i > 3):
-            replaced += inData[i]+chr(low_bound + j-i)
+            charToAdd = low_bound + j-i
+            replaced += inData[i] + chr(charToAdd)
+            
+            max_char = max(max_char, charToAdd)
         
         else:
             replaced += inData[i:j]
 
         i = j
     
-    return replaced
+    return (replaced, max_char)
 
 def replace_tags(inData):
     import re
@@ -117,18 +110,29 @@ def replace_tags(inData):
     
     allocated_space = 512
 
+    groupMaxes = [len(groupScores_cumulative[i]) for i in range(numGroups)]
+
+    allocated_space = min(512, sum(groupMaxes))
+
     # generate initial, equal allocation
     allocation = [0]*numGroups
     for i in range(allocated_space):
+        group = i%numGroups
+        if (allocation[group] == groupMaxes[group]):
+            i -= 1
+            continue
+        
         allocation[i%numGroups] += 1
 
     # optimise allocation
-    lastTotal = sum([groupScores_cumulative[i][allocation[i]-1] for i in range(numGroups)])
+    lastTotal = sum([groupScores_cumulative[i][allocation[i]-1] for i in range(numGroups) ])
+
+    # do-while loop
     while True:
         potentialLosses = [groupScores_cumulative[i][allocation[i]-1]-groupScores_cumulative[i][allocation[i]-2] for i in range(numGroups)]
         toLoseOne = potentialLosses.index(min(potentialLosses))
 
-        potentialGains = [groupScores_cumulative[i][allocation[i]]-groupScores_cumulative[i][allocation[i]-1] for i in range(numGroups)]
+        potentialGains = [groupScores_cumulative[i][allocation[i]]-groupScores_cumulative[i][allocation[i]-1] if (allocation[i] < groupMaxes[i]) else 0 for i in range(numGroups)]
         toGainOne = potentialGains.index(max(potentialGains))
 
         if (toGainOne != toLoseOne):
@@ -155,13 +159,13 @@ def replace_tags(inData):
 def replace_repeats_then_lzw(inData):
     import pickle
 
-    noRuns = replace_runs(inData, True)
+    (noRuns, max_char) = replace_runs(inData, True)
 
-    (replacedTags, dictionary) = replace_tags(noRuns) # change to noRuns
+    (replacedTags, dictionary) = replace_tags(noRuns)
 
-    compressed = lzw(replacedTags, True)
+    compressed = lzw(replacedTags, max_char)
 
-    return pickle.dumps((dictionary, compressed))
+    return pickle.dumps((max_char, dictionary, compressed), protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':
