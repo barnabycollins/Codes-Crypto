@@ -117,7 +117,7 @@ Following idea 5, I decided to take a more proactive approach in defining what r
 	\item \verb|[ \n]([a-zA-Z]+)[ \.,:;!]|
 \end{itemize}
 
-These encode a simple \rmfamily\LaTeX\normalfont\, command, a command with any number of parameters contained within \verb|{}| brackets and a single word respectively. Through some experimentation I have adjusted them to the following, finding that (unsurprisingly) increasing the number of matches improves compression ratios:
+These encode a simple \rmfamily\LaTeX\normalfont\, command, a command with any number of parameters contained within \verb|{}| brackets and a single word respectively. Through some experimentation I have adjusted them to the following, finding that (unsurprisingly) increasing the number of matches and targeting longer words improves compression ratios:
 
 \begin{itemize}
 	\item \verb|(\\[a-zA-Z]+)|
@@ -134,6 +134,10 @@ I find all the matches of each regex in the input, produce counts, score each ma
 \end{itemize}
 
 As stated before, I am assuming that the document only uses characters 0-255, but this scheme could theoretically also be used for extended character sets that include, for example, Nordic letters - the ranges would change, but the same techniques could still be applied.
+
+The dictionary is then stored alongside the compressed output, making decoding trivial. The function has been written to work with whatever space and regexes are given in order to be easy to tinker with, so it should be easy to adjust and optimise.
+
+Applying this method in between idea 3 and LZW during the compression afforded me compression ratios of 2.1-2.3.
 
 
 
