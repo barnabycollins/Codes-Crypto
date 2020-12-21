@@ -131,3 +131,5 @@ dmypy.json
 # bruh
 *.lz
 *-decoded.tex
+*/report/*
+!*/report/*.tex

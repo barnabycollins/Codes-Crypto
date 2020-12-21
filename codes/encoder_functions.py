@@ -75,15 +75,15 @@ def replace_runs(inData, expanded_chars=False):
     
     return (replaced, max_char)
 
-def replace_tags(inData):
+def replace_tags(inData, allocated_space = 512):
     import re
     from collections import Counter
     
     # regexes of (preferably mutually exclusive) common patterns (in this case, TeX tags)
     tagGroups = [
-        r'(\\[a-zA-Z]+)',                       # standard TeX tag
-        r'(\\[a-zA-Z]+(?:\{[a-zA-Z ]*\})+)',    # TeX tag with parameters following it
-        r'[ \n]([a-zA-Z]{3,})[ \.,:;!]'         # words at least 3 chars long
+        r'(\\[a-zA-Z]+)',                               # standard TeX tag
+        r'(\\[a-zA-Z]+(?:[\{\[][a-zA-Z 0-9]*[\}\]])+)',    # TeX tag with parameters following it
+        r'[ \n\(\{]([a-zA-Z]{3,})[ \.,:;!\)\}]'             # words at least 3 chars long
     ]
 
     numGroups = len(tagGroups)
@@ -107,12 +107,9 @@ def replace_tags(inData):
             runningTotal += j[1]
             groupScores_cumulative[-1].append(runningTotal)
 
-    
-    allocated_space = 512
-
     groupMaxes = [len(groupScores_cumulative[i]) for i in range(numGroups)]
 
-    allocated_space = min(512, sum(groupMaxes))
+    allocated_space = min(allocated_space, sum(groupMaxes))
 
     # generate initial, equal allocation
     allocation = [0]*numGroups
