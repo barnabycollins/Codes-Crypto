@@ -1,0 +1,16 @@
+ECB encrypts every 8-byte section of input separately.
+
+- Started by bruteforcing 8-byte strings via hex but quickly realised this would take a very long time (34 years iirc?)
+- Downloaded a dictionary and started compiling all possible what3words addresses - also was taking a long time
+- Limited the generated addresses to ones with 16 characters - also was taking ages
+- Noticed what3words only used words with 4+ characters, eliminating words of length 1-3 - didn't help much as there are more long words than short
+- 
+
+
+4444.4444.666666
+4444.666666.4444
+666666.4444.4444
+
+4444.55555.55555
+55555.4444.55555
+55555.55555.4444
