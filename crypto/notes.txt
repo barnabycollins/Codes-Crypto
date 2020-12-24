@@ -20,3 +20,8 @@ Took 26 minutes (1550s) to do 50k with 16 threads
                  1584         50k      20
 
 Took 74 minutes (4551s) to do 200k with 16 threads
+
+Took 6.4h (23160s) to do 700k with 16 threads (with antivirus scanning)
+
+alternate dbs:
+https://github.com/first20hours/google-10000-english/blob/master/google-10000-english-no-swears.txt

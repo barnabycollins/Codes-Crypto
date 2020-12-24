@@ -94,7 +94,7 @@ def loadSegments():
 if (__name__ == '__main__'):
     import time, pickle
 
-    #possibleSegments = genSegments()
+    possibleSegments = genSegments()
     possibleSegments = loadSegments()
 
     pool = mp.Pool(16)
@@ -109,7 +109,11 @@ if (__name__ == '__main__'):
     store.close()
 
 
-    to_process = list(possibleSegments[0].difference(alreadyCompleted))[:400000]
+    to_process = list(possibleSegments[0].difference(alreadyCompleted))[:700000]
+    
+    print(f'Processing {to_process} items ({len(possibleSegments[0])} - {len(alreadyCompleted)})')
+
+    del possibleSegments
 
     count = 0
 
