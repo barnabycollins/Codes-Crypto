@@ -17,6 +17,69 @@ def checkItem(item):
 
 def genSegments(dump=True):
     from tqdm import tqdm
+
+    dictionary = open('google-10k.txt', 'r').read().splitlines()
+
+    filteredByLength = dict((i, []) for i in [4, 5, 6])
+
+    for i in dictionary:
+        l = len(i)
+
+        if (4 <= l and l <= 6):
+            filteredByLength[l].append(i)
+
+    del dictionary
+
+    possibleLengths = [
+        [4, 4, 6],
+        [4, 6, 4],
+        [6, 4, 4],
+        [4, 5, 5],
+        [5, 4, 5],
+        [5, 5, 4]
+    ]
+
+    numCharsInMiddle = [7 - i[0] for i in possibleLengths]
+
+    requiredSplits = dict((i, set()) for i in [4, 5, 6])
+    for i in range(len(possibleLengths)):
+        requiredSplits[possibleLengths[i][1]].add(numCharsInMiddle[i])
+
+    splits = dict((i, dict((j, [set(), set()]) for j in requiredSplits[i])) for i in [4, 5, 6])
+
+    for i in splits:
+        for j in splits[i]:
+            for k in filteredByLength[i]:
+                splits[i][j][0].add(k[:j])
+                splits[i][j][1].add(k[j:])
+
+    possibleSegments = [set(), set()]
+
+    for [word1Length, word2Length, word3Length] in possibleLengths:
+        print(f'\nStarting {word1Length}, {word2Length}, {word3Length}...')
+
+        word2Half1Length = 7-word1Length
+
+        for word1 in tqdm(filteredByLength[word1Length]):
+            for halfWord2 in splits[word2Length][word2Half1Length][0]:
+                possibleSegments[0].add(word1 + '.' + halfWord2)
+        
+        for halfWord2 in tqdm(splits[word2Length][word2Half1Length][1]):
+            for word3 in filteredByLength[word3Length]:
+                possibleSegments[1].add(halfWord2 + '.' + word3)
+
+    if(dump):
+        import json
+
+        print('Writing file...')
+        f = open('possibleSegments.json', 'w')
+        json.dump([list(i) for i in possibleSegments], f)
+        f.close()
+        
+    return possibleSegments
+
+def genSegmentsLong(dump=True):
+    from tqdm import tqdm
     import json
 
     dictionary = json.load(open('words_dictionary.json'))
@@ -70,21 +133,21 @@ def genSegments(dump=True):
                 possibleSegments[1].add(halfWord2 + '.' + word3)
 
     if(dump):
-        import pickle
+        import json
 
         print('Writing file...')
-        f = open('possibleSegments.pickle', 'wb')
-        pickle.dump(possibleSegments, f, protocol=pickle.HIGHEST_PROTOCOL)
+        f = open('possibleSegments.json', 'w')
+        json.dump([list(i) for i in possibleSegments], f)
         f.close()
         
     return possibleSegments
 
 def loadSegments():
-    import pickle
+    import json
 
     print('Loading segment file...')
-    f = open('C:/possibleSegments.pickle', 'rb')
-    possibleSegments = pickle.load(f)
+    f = open('C:/possibleSegments.json', 'r')
+    possibleSegments = [set(i) for i in json.load(f)]
     f.close()
 
     return possibleSegments
@@ -92,30 +155,29 @@ def loadSegments():
 
 
 if (__name__ == '__main__'):
-    import time, pickle
+    import time, json
 
-    possibleSegments = genSegments()
+    #possibleSegments = genSegments()
     possibleSegments = loadSegments()
 
-    pool = mp.Pool(16)
 
+    store = open('rainbowTable.json', 'r')
 
-    store = open('rainbowTable.pickle', 'rb')
-
-    alreadyCompleted = pickle.load(store)
+    alreadyCompleted = set(json.load(store))
 
     print(f'Loaded {len(alreadyCompleted)} existing tuples.')
 
     store.close()
 
+    pool = mp.Pool(16)
 
-    to_process = list(possibleSegments[0].difference(alreadyCompleted))[:700000]
+    to_process = list(possibleSegments[0].difference(alreadyCompleted))[:550000]
     
-    print(f'Processing {to_process} items ({len(possibleSegments[0])} - {len(alreadyCompleted)})')
+    print(f'Processing {len(to_process)} items ({len(possibleSegments[0])} - {len(alreadyCompleted)})')
 
     del possibleSegments
 
-    count = 0
+    count = 1
 
     print(f'Generating table.')
 
@@ -126,7 +188,7 @@ if (__name__ == '__main__'):
     found = False
 
     for i in results:
-        if (count%256 == 0):
+        if (count%500 == 0):
             print(f'{count}')
 
         if (i != None):
@@ -143,22 +205,20 @@ if (__name__ == '__main__'):
     print(f'Total time taken: {end - start}')
 
     print('Finished. Storing results to disk...')
-
-
-    import json
     
-    store_js = open('rainbowtable.json', 'w')
+    store_js = open('rainbowTable.json', 'w')
 
     json.dump(list(alreadyCompleted | set(to_process)), store_js)
 
     store_js.close()
 
-
+    """
     store = open('rainbowTable.pickle', 'wb')
 
     pickle.dump(alreadyCompleted | set(to_process), store)
 
     store.close()
+    """
 
     print('Bam.')
 

@@ -23,5 +23,7 @@ Took 74 minutes (4551s) to do 200k with 16 threads
 
 Took 6.4h (23160s) to do 700k with 16 threads (with antivirus scanning)
 
+Took 3h (10782s) to do 550k reduced dictionary with 16 threads
+
 alternate dbs:
 https://github.com/first20hours/google-10000-english/blob/master/google-10000-english-no-swears.txt

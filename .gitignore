@@ -133,5 +133,5 @@ dmypy.json
 *-decoded.tex
 */report/*
 !*/report/*.tex
-*/possibleSegments.pickle
+*/possibleSegments*
 */rainbowTable.pickle
