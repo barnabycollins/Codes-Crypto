@@ -171,7 +171,7 @@ if (__name__ == '__main__'):
 
     pool = mp.Pool(16)
 
-    to_process = list(possibleSegments[0].difference(alreadyCompleted))[:550000]
+    to_process = list(possibleSegments[0].difference(alreadyCompleted))
     
     print(f'Processing {len(to_process)} items ({len(possibleSegments[0])} - {len(alreadyCompleted)})')
 
