@@ -10,9 +10,9 @@ def encrypt(input):
 
 
 def checkItem(item):
-    global target1
+    global target2
 
-    if (encrypt(item) == target1):
+    if (encrypt(item) == target2):
         return item
 
 def genSegments(dump=True):
@@ -51,7 +51,9 @@ def genSegments(dump=True):
         for j in splits[i]:
             for k in filteredByLength[i]:
                 splits[i][j][0].add(k[:j])
-                splits[i][j][1].add(k[j:])
+                
+                if (k[:j] == 'bil'):
+                    splits[i][j][1].add(k[j:])
 
     possibleSegments = [set(), set()]
 
@@ -115,7 +117,9 @@ def genSegmentsLong(dump=True):
         for j in splits[i]:
             for k in filteredByLength[i]:
                 splits[i][j][0].add(k[:j])
-                splits[i][j][1].add(k[j:])
+
+                if (k[:j] == 'bil'):
+                    splits[i][j][1].add(k[j:])
 
     possibleSegments = [set(), set()]
 
@@ -146,7 +150,7 @@ def loadSegments():
     import json
 
     print('Loading segment file...')
-    f = open('C:/possibleSegments.json', 'r')
+    f = open('possibleSegments.json', 'r')
     possibleSegments = [set(i) for i in json.load(f)]
     f.close()
 
@@ -158,10 +162,11 @@ if (__name__ == '__main__'):
     import time, json
 
     #possibleSegments = genSegments()
-    possibleSegments = loadSegments()
+    possibleSegments = genSegmentsLong()
+    #possibleSegments = loadSegments()
 
 
-    store = open('rainbowTable.json', 'r')
+    store = open('rainbowTable_half2.json', 'r')
 
     alreadyCompleted = set(json.load(store))
 
@@ -171,9 +176,9 @@ if (__name__ == '__main__'):
 
     pool = mp.Pool(16)
 
-    to_process = list(possibleSegments[0].difference(alreadyCompleted))
+    to_process = list(possibleSegments[1].difference(alreadyCompleted))
     
-    print(f'Processing {len(to_process)} items ({len(possibleSegments[0])} - {len(alreadyCompleted)})')
+    print(f'Processing {len(to_process)} items ({len(possibleSegments[1])} - {len(alreadyCompleted)})')
 
     del possibleSegments
 
@@ -206,19 +211,11 @@ if (__name__ == '__main__'):
 
     print('Finished. Storing results to disk...')
     
-    store_js = open('rainbowTable.json', 'w')
+    store_js = open('rainbowTable_half2.json', 'w')
 
     json.dump(list(alreadyCompleted | set(to_process)), store_js)
 
     store_js.close()
-
-    """
-    store = open('rainbowTable.pickle', 'wb')
-
-    pickle.dump(alreadyCompleted | set(to_process), store)
-
-    store.close()
-    """
 
     print('Bam.')
 
