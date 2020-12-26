@@ -3,11 +3,10 @@ from subprocess import check_output
 import multiprocessing as mp
 
 target = b'903408ec4d951acfaeb47ca88390c475'
-[target1, target2] = [target[i:i+16] for i in range(int(len(target)/16))]
+[target1, target2] = [target[i*16:i*16+16] for i in range(int(len(target)/16))]
 
 def encrypt(input):
     return check_output(f"C:/encrypt.exe {input.encode(encoding='ascii').hex()}").strip()
-
 
 def checkItem(item):
     global target2
@@ -161,8 +160,8 @@ def loadSegments():
 if (__name__ == '__main__'):
     import time, json
 
-    #possibleSegments = genSegments()
-    possibleSegments = genSegmentsLong()
+    possibleSegments = genSegments()
+    #possibleSegments = genSegmentsLong()
     #possibleSegments = loadSegments()
 
 

@@ -1,1 +1,1 @@
-tile.bil
+tile.bills.print
