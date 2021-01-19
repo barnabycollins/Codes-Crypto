@@ -82,8 +82,8 @@ def replace_tags(inData, allocated_space = 512):
     # regexes of (preferably mutually exclusive) common patterns (in this case, TeX tags)
     tagGroups = [
         r'(\\[a-zA-Z]+)',                               # standard TeX tag
-        r'(\\[a-zA-Z]+(?:[\{\[][a-zA-Z 0-9]*[\}\]])+)',    # TeX tag with parameters following it
-        r'[ \n\(\{]([a-zA-Z]{3,})[ \.,:;!\)\}]'             # words at least 3 chars long
+        r'(\\[a-zA-Z]+(?:[{[][a-zA-Z 0-9]*[}]])+)',    # TeX tag with parameters following it
+        r'[ \n\(\{]([a-zA-Z]{3,})[ \.,:;!)}]'             # words at least 3 chars long
     ]
 
     numGroups = len(tagGroups)
@@ -111,22 +111,28 @@ def replace_tags(inData, allocated_space = 512):
 
     allocated_space = min(allocated_space, sum(groupMaxes))
 
-    # generate initial, equal allocation
+    # generate initial allocation
     allocation = [0]*numGroups
-    for i in range(allocated_space):
-        group = i%numGroups
-        if (allocation[group] == groupMaxes[group]):
-            i -= 1
-            continue
+    groupsToAllocate = numGroups
+    remainingSpace = allocated_space
+    for i in range(numGroups):
+        thisGroupAllocation = 0
+        groupMax = groupMaxes[i]
+
+        while (thisGroupAllocation < remainingSpace/groupsToAllocate and thisGroupAllocation < groupMax):
+            thisGroupAllocation += 1
         
-        allocation[i%numGroups] += 1
+
+        groupsToAllocate -= 1
+        remainingSpace -= thisGroupAllocation
+        allocation[i] = thisGroupAllocation
 
     # optimise allocation
-    lastTotal = sum([groupScores_cumulative[i][allocation[i]-1] for i in range(numGroups) ])
+    lastTotal = sum([groupScores_cumulative[i][allocation[i]-1] for i in range(numGroups)])
 
     # do-while loop
     while True:
-        potentialLosses = [groupScores_cumulative[i][allocation[i]-1]-groupScores_cumulative[i][allocation[i]-2] for i in range(numGroups)]
+        potentialLosses = [groupScores_cumulative[i][allocation[i]-1]-groupScores_cumulative[i][allocation[i]-2] if (allocation[i] > 1) else float('inf') for i in range(numGroups)]
         toLoseOne = potentialLosses.index(min(potentialLosses))
 
         potentialGains = [groupScores_cumulative[i][allocation[i]]-groupScores_cumulative[i][allocation[i]-1] if (allocation[i] < groupMaxes[i]) else 0 for i in range(numGroups)]
@@ -152,6 +158,25 @@ def replace_tags(inData, allocated_space = 512):
             translation_table[character] = replacements[j][0]
     
     return (inData, translation_table)
+
+def translate_chars(inData):
+    from collections import Counter
+
+    commonCounts = Counter(inData).most_common()
+
+    translator = {}
+
+    dictForDecoder = {}
+
+    for i in range(len(commonCounts)):
+        cur = commonCounts[i]
+
+        translator[cur] = i
+        dictForDecoder[i] = cur
+    
+    outData = "".join([chr(translator[i]) for i in inData])
+
+    return (outData, dictForDecoder)
 
 def replace_repeats_then_lzw(inData):
     import pickle
