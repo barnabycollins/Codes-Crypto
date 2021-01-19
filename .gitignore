@@ -137,3 +137,4 @@ dmypy.json
 */rainbowTable.pickle
 *apiKey.py
 *.pdf
+!submit/*
