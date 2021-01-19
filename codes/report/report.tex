@@ -89,14 +89,17 @@ My first instinct was to get a 'baseline' to compare other results against. I ch
 
 I next decided to try and implement a more advanced encoding scheme, and chose LZW because I like the fact that it generates its decoding dictionary as it goes rather than having to store it with the output. I also chose it over LZ78 because its compressed output is simpler and cleaner thanks to the fact that it pre-fills its dictionary.
 
-While the implementation of the LZW encoder went fairly smoothly, I did struggle with one thing: my decoder kept breaking, because it was looking for elements that did not exist in the dictionary yet. I struggled with this for a while, until I looked up the issue and found that it was in fact a quirk of LZW: if the encoder adds something to the dictionary and then immediately uses it in the next step, that item will not exist yet in the decoder's dictionary when it reaches that point. However, because this is the only time at which an error like this is encountered, it is possible to infer the situation and solve it simply by appending the first character of the last decoded value to the end of that same last decoded value. Once this was resolved, LZW yielded a compression ratio of 1.8-1.9 on both test documents.
+While the implementation of the LZW encoder went fairly smoothly, I did struggle with one thing: my decoder kept breaking, because it was looking for elements that did not exist in the dictionary yet. I struggled with this for a while, until I looked up the issue and found that it was in fact a quirk of LZW: if the encoder adds something to the dictionary and then immediately uses it in the next step, that item will not exist yet in the decoder's dictionary when it reaches that point. However, because this is the only time at which an error like this is encountered, it is possible to infer the situation and solve it simply by appending the first character of the last decoded value to the end of that same last decoded value.
 
+Once this was resolved, LZW yielded a compression ratio of 1.8-1.9 on both test documents.
+
+My next plan was to consider ways of exploiting predictable redundancies in the string, such that LZW could be left to work on more nuanced and document-specific redundancies.
 
 \section{Collapsing repeated characters}
 
-One of my test files contained some series of repeated characters. Indeed, a series of space characters was in the top 3 most common substrings at all reasonable lengths. I decided to write a function to detect these repeated characters, and then replace each run with a single instance of the character being repeated followed by a UTF-8 character signifying the number of repeats being represented. This character was chosen simply as corresponding character at space \verb|255 + num_repeats| in Unicode. For instance, the string \verb|`xxxxxx'| would be replaced by \verb|`xą'| (where \verb|ą| is the character with code $261 = 255 + 6$).
+One of my test files contained some series of repeated characters. Indeed, a series of space characters was in the top 3 most common substrings at all reasonable lengths. I decided to write a function to detect these repeated characters, and then replace each run with a single instance of the character being repeated followed by a UTF-8 character signifying the number of repeats being represented. This character was chosen simply as the character at space \verb|255 + num_repeats| in Unicode. For instance, the string \verb|`xxxxxx'| would be replaced by \verb|`xą'| (where \verb|ą| is the character with code $261 = 255 + 6$).
 
-Preprocessing the string with this method before LZW yielded consistent compression ratio improvements of 0.01-0.05.
+Preprocessing the string with this method yielded consistent compression ratio gains of 0.01-0.05.
 
 
 \section{Substring replacement: common substring search} \label{commonSubstringSearch}
@@ -115,7 +118,7 @@ Following idea 5, I decided to take a more proactive approach in defining what r
 	\item \verb|[ \n({[]([a-zA-Z]{3,})[ .,:;!)}\]]|
 \end{itemize}
 
-I find all the matches of each regex in the input, produce counts, score each matching string and then sort each regex in descending order of score. The score used is \verb|(length-2)*count| - a metric for the number of bytes saved by replacing that substring. I then produce an allocation of a fixed number of slots in a dictionary (initially 512, though this is subject to change) to maximise the total score of the items in the dictionary, and then replace every instance of each matched string with an allocated Unicode character. For this I have to adjust the lower bound of idea 3, essentially producing the following Unicode character allocation, following some tinkering:
+I find all the matches of each regex in the input, produce counts, score each matching string and then sort each regex in descending order of score. The score used is \verb|(length-2)*count| - a metric for the number of bytes saved by replacing that substring. I then produce an allocation of a fixed number of slots in a dictionary to maximise the total score, and replace every instance of each matched string with an allocated Unicode character. For this I have to adjust the lower bound of idea 3, essentially producing the following Unicode character allocation after doing some tinkering to find an appropriate size for this table:
 
 \begin{itemize}
 	\item 0-255: Standard document characters
@@ -123,21 +126,30 @@ I find all the matches of each regex in the input, produce counts, score each ma
 	\item 2048+: Characters used to identify the counts of repeated characters
 \end{itemize}
 
-As stated before, I am assuming that the document only uses characters 0-255, but this scheme could theoretically also be used for extended character sets that include, for example, Nordic letters - the ranges would change, but the same techniques could still be applied.
+As stated before, I am assuming that the document only uses characters 0-255, but this scheme could theoretically also be used for extended character sets that include, for example, Nordic letters - the ranges would change, but the same techniques could still be applied. Indeed, the only change needed would be to adjust the value \verb|maxCharacterCodeOfInput| in \verb|encode_decode_config.py|.
 
-The dictionary is then stored alongside the compressed output, making decoding trivial. The function has been written to work with whatever space and regexes are given in order to be easy to tinker with, so it should be easy to adjust and optimise.
+The dictionary is then stored alongside the compressed output, making decoding trivial. The function has been written to work with whatever space and regexes are given in order to be easy to tinker with.
 
-Applying this method in between idea 3 and LZW during the compression afforded me compression ratios of 2.2-2.5.
+Applying this method in between idea 3 and LZW afforded me compression ratios of 2.2-2.5.
 
 
 \section{Character redistribution}
 My techniques so far had resulted in a number of character codes above 256 being added to the input during compression. I realised that this could be wasteful as these characters would require twice as much space to store. Therefore, I decided to try redistributing the characters so that they were stored with the most common characters assigned to the smallest character codes and the least common to the largest. This obviously required a list of the most common characters to be stored with the compressed data.
 
-Attempting this gave me similar (but slightly reduced) compression ratios. Storing it without the dictionary of common characters confirmed my suspicions: it did make a very slight improvement (changing one ratio from 2.202 to 2.206), but this was outweighed by the size of the dictionary. Therefore I chose not to use it. My guess is that the inserted characters are already relatively few, meaning that redistribution does not change very much.
+Attempting this gave me similar (but slightly reduced) compression ratios. Storing it without the table of common characters confirmed my suspicions: it did make a very slight improvement (changing one ratio from 2.202 to 2.206), but this was outweighed by the size of the dictionary, which subtracted approximately 0.014 from the aforementioned ratio, giving me 2.188 overall. Therefore I chose not to use it. My guess for this is that the inserted Unicode characters are already relatively few, meaning that redistribution does not change very much.
 
 
+\section{Results}
+In summary, I have produced an algorithm which:
 
+\begin{itemize}
+	\item Collapses repeated characters by representing repeats with Unicode characters
+	\item Replaces the most frequently-occurring substrings matching relevant regexes
+	\item Performs LZW on the result, and
+	\item Stores the encoded file to disk using the \verb|pickle| library.
+\end{itemize}
 
+It achieves compression ratios of 2.28 for the scientific paper, and 2.46 for the more text-based NBA ruleset, and is quite easily-configurable and modular which I am proud of. Given more time, I would have tried some other 'standard' compression methods like PPM in comparison to my initial choice of LZW, but I decided to prioritise 'high-level' redundancies that I could derive from the context: ie, trying to model for \rmfamily\TeX\normalfont\ syntax and the known character set and language first.
 
 
 
