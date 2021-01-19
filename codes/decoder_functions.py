@@ -1,3 +1,4 @@
+import encode_decode_config
 
 def passthrough(inData):
     return inData
@@ -48,11 +49,9 @@ def replace_tags(inData, dictionary):
     
     return inData
 
-def replace_runs(inData, expanded_chars = False):
+def replace_runs(inData, low_char_bound=255):
     replaced = ''
     bound = len(inData)
-
-    low_char_bound = 767 if expanded_chars else 255
 
     i = 0
     while i < bound:
@@ -70,6 +69,9 @@ def replace_runs(inData, expanded_chars = False):
     
     return replaced
 
+def translate_chars(inData, translator):
+    return "".join([translator[ord(i)] for i in inData])
+
 def replace_repeats_then_lzw(inData):
     import pickle
 
@@ -79,7 +81,7 @@ def replace_repeats_then_lzw(inData):
 
     noRuns = replace_tags(replacedTags, dictionary)
 
-    return replace_runs(noRuns, True)
+    return replace_runs(noRuns, encode_decode_config.maxCodeofInputAndSubstrings)
 
 
 def huffman_and_lzw(inData):

@@ -23,4 +23,4 @@ Try including apostrophes & other special chars in word regexes?
 
 Tinkering with regexes showed that tags with parameters actually don't always improve things; worth more investigation & tinkering - reduce to just one parameter?
 
-Converting numbers to numeric values
+Tried redistributing characters so more common ones came first but dictionary size outweighed improvements, even with 1.5MB inputs

@@ -1,3 +1,4 @@
+from encode_decode_config import *
 
 def passthrough(inData):
     return inData
@@ -47,10 +48,7 @@ def lzw(inData, max_char=255):
 def huffman_and_lzw(inData):
     return huffman_test(lzw(inData))
 
-def replace_runs(inData, expanded_chars=False):
-    low_bound = 255
-    if (expanded_chars):
-        low_bound = 767
+def replace_runs(inData, low_bound = 255):
 
     replaced = ''
 
@@ -75,15 +73,15 @@ def replace_runs(inData, expanded_chars=False):
     
     return (replaced, max_char)
 
-def replace_tags(inData, allocated_space = 512):
+def replace_tags(inData, allocated_space = 512, max_input_char=255):
     import re
     from collections import Counter
     
     # regexes of (preferably mutually exclusive) common patterns (in this case, TeX tags)
     tagGroups = [
         r'(\\[a-zA-Z]+)',                               # standard TeX tag
-        r'(\\[a-zA-Z]+(?:[{[][a-zA-Z 0-9]*[}]])+)',    # TeX tag with parameters following it
-        r'[ \n\(\{]([a-zA-Z]{3,})[ \.,:;!)}]'             # words at least 3 chars long
+        #r'(\\[a-zA-Z]+(?:[{[][a-zA-Z 0-9]*[}\]])+)',    # TeX tag with parameters following it - doesn't seem to improve things based on testing
+        r'[ \n({[]([a-zA-Z]{3,})[ .,:;!)}\]]'             # words at least 3 chars long
     ]
 
     numGroups = len(tagGroups)
@@ -95,7 +93,7 @@ def replace_tags(inData, allocated_space = 512):
         tagGroups_scored.append(Counter())
 
         for tag in counts.keys():
-            tagGroups_scored[-1][tag] = (len(tag)-1)*counts[tag]
+            tagGroups_scored[-1][tag] = (len(tag)-2)*counts[tag]
             # compute score (this is the length of a tag minus the length of the character replacing it, times the number of instances of that tag)
 
     
@@ -104,6 +102,9 @@ def replace_tags(inData, allocated_space = 512):
         groupScores_cumulative.append([])
         runningTotal = 0
         for j in i.most_common():
+            if (j[1] <= 0):
+                break
+            
             runningTotal += j[1]
             groupScores_cumulative[-1].append(runningTotal)
 
@@ -153,7 +154,7 @@ def replace_tags(inData, allocated_space = 512):
     for i in range(numGroups):
         replacements = tagGroups_scored[i].most_common(allocation[i])
         for j in range(allocation[i]):
-            character = chr(256 + sum(allocation[:i]) + j)
+            character = chr(max_input_char + 1 + sum(allocation[:i]) + j)
             inData = inData.replace(replacements[j][0], character)
             translation_table[character] = replacements[j][0]
     
@@ -166,24 +167,25 @@ def translate_chars(inData):
 
     translator = {}
 
-    dictForDecoder = {}
+    listForDecoder = []
 
     for i in range(len(commonCounts)):
-        cur = commonCounts[i]
+        cur = commonCounts[i][0]
+        out = chr(i)
 
-        translator[cur] = i
-        dictForDecoder[i] = cur
+        translator[cur] = out
+        listForDecoder.append(cur)
     
-    outData = "".join([chr(translator[i]) for i in inData])
+    outData = "".join([translator[i] for i in inData])
 
-    return (outData, dictForDecoder)
+    return (outData, listForDecoder)
 
 def replace_repeats_then_lzw(inData):
     import pickle
 
-    (noRuns, max_char) = replace_runs(inData, True)
+    (noRuns, max_char) = replace_runs(inData, maxCodeofInputAndSubstrings)
 
-    (replacedTags, dictionary) = replace_tags(noRuns)
+    (replacedTags, dictionary) = replace_tags(noRuns, allocationForReplacingSubstrings, maxCharacterCodeOfInput)
 
     compressed = lzw(replacedTags, max_char)
 
