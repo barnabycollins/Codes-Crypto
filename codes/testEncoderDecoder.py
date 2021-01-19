@@ -5,7 +5,7 @@
 
 import os
 import sys
-from utils import pythonCommand
+pythonCommand = 'python374'
 
 testFile        = sys.argv[1]
 inputFile       = testFile + ".tex"

@@ -1,8 +1,12 @@
 import encode_decode_config
 
+# See encoder_functions.py for function descriptions.
+
 def passthrough(inData):
     return inData
 
+
+'''
 def huffman_test(inData):
     from dahuffman import HuffmanCodec
     import pickle
@@ -15,6 +19,8 @@ def huffman_test(inData):
     decoded = codec.decode(encoded)
 
     return reduce(lambda x,y: x+y, decoded)
+'''
+
 
 def lzw(inData, max_char=255):
     dictIndex = max_char+1 # add one to include max_char itself in ranges
@@ -43,11 +49,13 @@ def lzw(inData, max_char=255):
 
     return outData
 
+
 def replace_tags(inData, dictionary):
     for i in dictionary.keys():
         inData = inData.replace(i, dictionary[i])
     
     return inData
+
 
 def replace_runs(inData, low_char_bound=255):
     replaced = ''
@@ -69,8 +77,10 @@ def replace_runs(inData, low_char_bound=255):
     
     return replaced
 
+
 def translate_chars(inData, translator):
     return "".join([translator[ord(i)] for i in inData])
+
 
 def replace_repeats_then_lzw(inData):
     import pickle
@@ -83,6 +93,3 @@ def replace_repeats_then_lzw(inData):
 
     return replace_runs(noRuns, encode_decode_config.maxCodeofInputAndSubstrings)
 
-
-def huffman_and_lzw(inData):
-    return lzw(huffman_test(inData))

@@ -1,7 +1,6 @@
 import sys, re
 
-pythonCommand = 'python374'
-
+# Open and return information relating to the file given in sys.argv[1]. Used in encoder.py and decoder.py.
 def getFileFromCommand():
 
     if (len(sys.argv) == 2):

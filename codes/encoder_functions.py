@@ -1,8 +1,11 @@
 from encode_decode_config import *
 
+# Don't compress data. Used for debug.
 def passthrough(inData):
     return inData
 
+
+'''
 def huffman_test(inData):
     from dahuffman import HuffmanCodec
     import pickle
@@ -16,7 +19,10 @@ def huffman_test(inData):
     to_pickle = (table, encoded)
 
     return pickle.dumps(to_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+'''
 
+
+# Performs Lempel-Ziv-Welch. String -> [int]
 def lzw(inData, max_char=255):
 
     dictIndex = max_char+1
@@ -44,10 +50,9 @@ def lzw(inData, max_char=255):
     
     return outData
 
-    
-def huffman_and_lzw(inData):
-    return huffman_test(lzw(inData))
 
+# Replaces runs of the same character with a single character followed by a Unicode character representing run length.
+# eg 'xxxxxx' -> 'xą'.
 def replace_runs(inData, low_bound = 255):
 
     replaced = ''
@@ -73,6 +78,8 @@ def replace_runs(inData, low_bound = 255):
     
     return (replaced, max_char)
 
+
+# Compiles and applies a dictionary mapping regex-defined regularly-occurring strings to Unicode symbols.
 def replace_tags(inData, allocated_space = 512, max_input_char=255):
     import re
     from collections import Counter
@@ -160,6 +167,8 @@ def replace_tags(inData, allocated_space = 512, max_input_char=255):
     
     return (inData, translation_table)
 
+
+# Redistributes characters with the most common character being assigned the lowest code, etc.
 def translate_chars(inData):
     from collections import Counter
 
@@ -180,6 +189,8 @@ def translate_chars(inData):
 
     return (outData, listForDecoder)
 
+
+# Function to apply replace_runs(), then replace_tags(), then lzw() and return the output for writing to disk.
 def replace_repeats_then_lzw(inData):
     import pickle
 
@@ -191,9 +202,3 @@ def replace_repeats_then_lzw(inData):
 
     return pickle.dumps((max_char, dictionary, compressed), protocol=pickle.HIGHEST_PROTOCOL)
 
-
-if __name__ == '__main__':
-
-    replace_repeats_then_lzw(open('testdocs/test1.tex', 'r', newline='').read())
-
-    #import decoder_functions
